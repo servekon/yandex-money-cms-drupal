@@ -1,3 +1,8 @@
+### 08.05.2015
+* Update donate module. Added setting fields, change form #action(in the test mode Donate isn't working). Fixed translations.
+* Refactoring code. Now config urls in the Services section.
+* Fixed incorrect use of t() function.
+
 ### 29.04.2015
 * Added support multilanguage (English, Russian)
 * Update icons

@@ -20,15 +20,15 @@ function yamoney_init() {
 function yamoney_permission() {
   return array(
     'access yandex money transaction' => array(
-      'title' => t('Access YaMoney transaction'),
+      'title' => 'Access YaMoney transaction',
       'description' => t('Display the yandex money transaction.'),
     ),
     'access own yandex money transaction' => array(
-      'title' => t('Access own YaMoney transaction'),
+      'title' => 'Access own YaMoney transaction',
       'description' => t('Display the yandex money transaction by own user.'),
     ),
     'access yamoney settings' => array(
-      'title' => t('Access YaMoney API'),
+      'title' => 'Access YaMoney API',
       'description' => t('Access to Yandex Money API variables.'),
     ),
   );
@@ -51,22 +51,39 @@ function yamoney_menu() {
     'access callback' => 'yamoney_check_server_ip',
     'type' => MENU_CALLBACK,
   );
-
+  
+  $items['admin/config/services/yamoney'] = array(
+    'title' => 'Yandex.Money',
+    'description' => 'Yandex.Money base settings page.',
+    'position' => 'left',
+    'weight' => -20,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+  
   // Config page
-  $items['admin/config/system/yamoney'] = array(
-    'title' => t('Yandex.Money Core'),
-    'description' => t('Yandex.Money base settings page.'),
+  $items['admin/config/services/yamoney/settings'] = array(
+    'title' => 'Yandex.Money Core',
+    'description' => 'Yandex.Money base settings page.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('yamoney_admin_settings'),
     'access arguments' => array('access yamoney settings'),
-    'type' => MENU_NORMAL_ITEM,
     'file' => 'yamoney.admin.inc',
+    'weight' => -10,
   );
-
-  // Transactions page menu
+  
+  $menu['admin/config/services/yamoney/settings/main'] = array(
+    'title' => 'Yandex.Money Core', 
+    'type' => MENU_DEFAULT_LOCAL_TASK, 
+    'weight' => -1,
+  );
+ 
+   // Transactions page menu
   $items['admin/reports/yamoney_transactions'] = array(
-    'title' => t('Yandex.Money transactions'),
-    'description' => t('Yandex.Money all transactions page.'),
+    'title' => 'Yandex.Money transactions',
+    'description' => 'Yandex.Money all transactions page.',
     'page callback' => 'yamoney_transactions_page',
     'access arguments' => array('access yandex money transaction'),
     'type' => MENU_NORMAL_ITEM,
@@ -75,8 +92,8 @@ function yamoney_menu() {
 
   // Account transaction table
   $items['user/%user/yamoney_payments'] = array(
-    'title' => t('My transactions'),
-    'description' => t('Yandex money user transactions page.'),
+    'title' => 'My transactions',
+    'description' => 'Yandex money user transactions page.',
     'page callback' => 'yamoney_transactions_user_page',
     'page arguments' => array(1),
     'access arguments' => array('access own yandex money transaction'),
@@ -316,8 +333,8 @@ function yamoney_get_payment_methods() {
     'WM' => t('Payment from a WebMoney e-wallet'),
     'AB' => t('Payment via Alfa-Click'),
     'SB' => t('Payment via Sberbank: payment by text messages or Sberbank Online'),
-	 'MA' => t('Payment via MasterPass'),
-	 'PB' => t('Payment via Promsvyazbank'),
+    'MA' => t('Payment via MasterPass'),
+    'PB' => t('Payment via Promsvyazbank'),
   );
 }
 
@@ -433,22 +450,13 @@ function yamoney_get_quick_params(YAMoneyTransaction $transaction) {
  */
 function yamoney_get_order_submission_url() {
   $is_test = variable_get('yamoney_mode', 'test') === 'test';
-  if (variable_get('yamoney_shop', 0)) {
-    // shop
-    if ($is_test) {
-      return 'https://demomoney.yandex.ru/eshop.xml';
-    }
-    else {
-      return 'https://money.yandex.ru/eshop.xml';
-    }
+  $url = 'https://money.yandex.ru';
+  $path = '/eshop.xml';
+  if ($is_test) {
+    $url = 'https://demomoney.yandex.ru';
   }
-  else {
-    // quick
-    if ($is_test) {
-      return 'https://demomoney.yandex.ru/quickpay/confirm.xml';
-    }
-    else {
-      return 'https://money.yandex.ru/quickpay/confirm.xml';
-    }
+  if (variable_get('yamoney_shop', 0) == 0){
+    $path = '/confirm.xml';
   }
+  return $url.$path;
 }

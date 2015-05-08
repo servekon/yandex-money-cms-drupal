@@ -5,11 +5,17 @@
  */
 function yamoney_admin_settings() {
   $form = array();
-
+  
+  $form['group_settings'] = array(
+    '#type' => 'vertical_tabs',
+    '#weight' => 7,
+  );
+  
   // General settings
   $form['yamoney_all'] = array(
     '#type' => 'fieldset',
     '#title' => t('Base options'),
+    '#group' => 'group_settings'
   );
   $form['yamoney_all']['yamoney_ip'] = array(
     '#type' => 'textarea',
@@ -51,6 +57,7 @@ function yamoney_admin_settings() {
   $form['yamoney_shop_setting'] = array(
     '#type' => 'fieldset',
     '#title' => t('Yandex shop settings'),
+    '#group' => 'group_settings'
   );
   $form['yamoney_shop_setting']['yamoney_shop'] = array(
     '#type' => 'checkbox',
@@ -85,6 +92,7 @@ function yamoney_admin_settings() {
   $form['yamoney_purse_setting'] = array(
     '#type' => 'fieldset',
     '#title' => t('Yandex purse settings'),
+    '#group' => 'group_settings'
   );
   $form['yamoney_purse_setting']['yamoney_receiver'] = array(
     '#type' => 'textfield',
@@ -104,20 +112,25 @@ function yamoney_admin_settings() {
   $form['yamoney_texts'] = array(
     '#type' => 'fieldset',
     '#title' => t('Text for success and fail payment pages'),
+    '#group' => 'group_settings'
   );
   $success = variable_get('yamoney_success_text', '');
+  if(is_array($success)){
+    $success=$success['value'];
+  }
   $form['yamoney_texts']['yamoney_success_text'] = array(
     '#type' => 'text_format',
     '#title' => t('Text for success page'),
-    '#default_value' => $success['value'] ? $success['value'] : '',
-    '#format' => $success['format'] ? $success['format'] : '',
+    '#default_value' => $success,
   );
   $fail = variable_get('yamoney_fail_text', '');
+  if(is_array($fail)){
+    $fail=$fail['value'];
+  }
   $form['yamoney_texts']['yamoney_fail_text'] = array(
     '#type' => 'text_format',
     '#title' => t('Text for fail page'),
-    '#default_value' => $fail['value'] ? $fail['value'] : '',
-    '#format' => $fail['format'] ? $fail['format'] : '',
+    '#default_value' => $fail,
   );
   return system_settings_form($form);
 }

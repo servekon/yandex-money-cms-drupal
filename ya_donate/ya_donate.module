@@ -5,12 +5,12 @@
 function ya_donate_permission() {
   return array(
     'access yamoney donate settings' => array(
-      'title' => t('Access YaMoney donate settings'),
+      'title' => t('Access Yandex.Money donate settings'),
       'description' => t('Yandex money donate settings.'),
     ),
     'view donate block' => array(
-      'title' => t('Access YaMoney donate block'),
-      'description' => t('Yandex money donate block.'),      
+      'title' => t('Access Yandex.Money donate block'),
+      'description' => t('Yandex.Money donate block.'),      
     ),
   );
 }
@@ -19,28 +19,43 @@ function ya_donate_permission() {
  * Implements hook_menu().
  */
 function ya_donate_menu() {
-  $items['admin/config/yamoney/donate'] = array(
-    'title' => 'Yandex donate settings.',
+  $items['admin/config/services/yamoney/donate'] = array(
+    'title' => 'Settings of Yandex.Money donate module',
     'description' => 'Yandex money danate settings page.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ya_donate_settings'),
     'access arguments' => array('access yamoney donate settings'),
-    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
   );
   return $items;
 }
 
 function ya_donate_settings(){
   $form = array();
+  $form['yamoney_donate_receiver'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Purse number'),
+    '#default_value' => variable_get('yamoney_donate_receiver', ''),
+  );
   $form['ya_donate_text'] = array(
     '#type' => 'textfield',
     '#title' => t('Donate text'),
     '#default_value' => variable_get('ya_donate_text', ''),
   );
+  $form['ya_donate_text_targets'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Details of payment'),
+    '#default_value' => variable_get('ya_donate_text_targets', ''),
+  );
+  $form['ya_donate_button_text'] = array(
+    '#type' => 'textfield',
+    '#title' => t('The text on the button'),
+    '#description' => t('If empty then default value will be').': '.t('Donate'),
+    '#default_value' => variable_get('ya_donate_button_text', ''),
+  );
   $form['ya_donate_user_amount'] = array(
     '#type' => 'textfield',
-    '#title' => t('Donate amount'),
-    '#description' => t('Leave blank if the amount entered by the user.'),
+    '#title' => t('Default donate amount'),
     '#default_value' => variable_get('ya_donate_user_amount', ''),    
   );
   return system_settings_form($form);
@@ -57,7 +72,7 @@ function ya_donate_settings_validate($form, &$form_state){
  */
 function ya_donate_block_info(){
   $blocks['donate_block'] = array(
-    'info' => t('Yandex money donate block'),
+    'info' => t('Yandex.Money donate block'),
     'cache' => DRUPAL_NO_CACHE,
   );
   return $blocks;
@@ -80,64 +95,58 @@ function ya_donate_block_view($delta) {
 
 function ya_donate_block_form(){
   $form = array();
-  if(variable_get('yamoney_mode', 'test') == 'live') {
-    $form['#action'] = 'https://money.yandex.ru/quickpay/confirm.xml';
+  if(empty(variable_get('yamoney_donate_receiver', ''))) {
+    $form['empty'] = array(
+      '#markup' => t('Unknown payment recipient'),
+    );
+    return $form;
   }
-  else {
-    $form['#action'] = 'https://demomoney.yandex.ru/quickpay/confirm.xml';
+  $button = variable_get('ya_donate_button_text', '');
+  if(empty($button)){
+    $button = t('Donate');
   }
   $form['text'] = array(
-    '#markup' => variable_get('ya_donate_text', ''),
+    '#type' => 'item',
+    '#title' => variable_get('ya_donate_text', ''),
   );
-  if(variable_get('ya_donate_user_amount', '')) {
-    $form['sum'] = array(
-      '#type' => 'hidden',
-      '#value' => variable_get('ya_donate_user_amount', ''),
-    );
-  }
-  else {
-    $form['sum'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Donate amount'),
-      '#description' => t('Enter the amount of the donation'),
-      '#size' => 20,
-    );    
-  }
-  if(variable_get('yamoney_receiver', '')) {
-    $form['receiver'] = array(
-      '#type' => 'hidden',
-      '#value' => variable_get('yamoney_receiver', ''),
-    );
-  }
+  $form['sum'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Donate amount'),
+    '#description' => t('Enter the amount of the donation'),
+    '#default_value' => variable_get('ya_donate_user_amount', ''),
+  );
+  $form['receiver'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('yamoney_donate_receiver'),
+  );
   $form['quickpay-form'] = array(
     '#type' => 'hidden',
-    '#value' => 'shop',
+    '#value' => 'donate',
+  );
+  $form['formcomment'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('ya_donate_text_targets', ''),
+  );
+  $form['short-dest'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('ya_donate_text_targets', ''),
   );
   $form['targets'] = array(
     '#type' => 'hidden',
-    '#value' => t('Donate payment'),
+    '#value' => variable_get('ya_donate_text_targets', ''),
   );
-
- /* $form['payment-type'] = array(
-    '#type' => 'select',
-    '#options' => array(
-      'PC' => t('Yandex.Money'),
-      'AC' => t('Credit card'),
-      'GP' => t('Cash or terminal'),
-      'MC' => t('Mobile phone'),
-    ),
-  ); */
+  $form['need-email'] = array(
+    '#type' => 'hidden',
+    '#value' => 'true'
+  );
   $form['payment-type'] = array(
     '#type' => 'hidden',
     '#value' => 'PC',
   );    
-  $form['comment'] = array(
-    '#type' => 'hidden',
-    '#value' => variable_get('ya_donate_text', ''),
-  );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => 'Donate',
+    '#value' => $button,
   );
+  $form['#action'] = 'https://money.yandex.ru/quickpay/confirm.xml';
   return $form;
 }

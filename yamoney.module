@@ -450,10 +450,10 @@ function yamoney_get_quick_params(YAMoneyTransaction $transaction) {
  */
 function yamoney_get_order_submission_url() {
   $is_test = variable_get('yamoney_mode', 'test') === 'test';
-  $url = 'https://money.yandex.ru';
+  $url = 'https://money.yandex.ru/quickpay';
   $path = '/eshop.xml';
   if ($is_test) {
-    $url = 'https://demomoney.yandex.ru';
+    $url = 'https://demomoney.yandex.ru/quickpay';
   }
   if (variable_get('yamoney_shop', 0) == 0){
     $path = '/confirm.xml';
